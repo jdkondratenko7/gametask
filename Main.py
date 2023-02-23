@@ -16,7 +16,7 @@ def start_game(cols: int = 7, rows: int = 6, to_win: int = 4, num_players: int =
         for player_ind in range(1, num_players + 1):
             print(f"Move {current_move}")
             col = int(input("Enter a column number to make a move: "))
-            move = board.make_move(col, player_ind)
+            move = board.make_move(col % cols, player_ind)
             while move == -1:
                 print("Impossible!")
                 col = int(input("Please enter another column number to make a move: "))
