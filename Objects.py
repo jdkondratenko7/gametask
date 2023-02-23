@@ -6,26 +6,6 @@ class Board():
         self.rows = rows
         self.to_win = to_win
 
-    def get_row(self, row_ind):
-        return self.board[row_ind]
-
-    def get_col(self, col_ind):
-        return [row[col_ind] for row in self.board]
-
-    def get_diag_l(self, dia_ind):
-        res = []
-        for i in range(dia_ind + 1):
-            if i < self.rows and dia_ind - i < self.cols:
-                res.append(self.board[i][dia_ind - i])
-        return res
-
-    def get_diag_r(self, dia_ind):
-        res = []
-        for i in range(dia_ind + 1):
-            if i < self.rows and self.cols - dia_ind + i < self.cols:
-                res.append(self.board[i][self.cols - dia_ind + i])
-        return res
-
     def has_empty(self):
         for i in range(self.cols):
             if self.board[0][i] == 0:
@@ -42,28 +22,34 @@ class Board():
                 return i
         return -1
 
-    def check_row(self, row, player_ind):
-        for i in range(len(row) - self.to_win + 1):
-            for el in row[i:i+self.to_win]:
-                if el != player_ind:
+    def check_direction(self, row, col, direction, player_ind):
+        directions = {"N": (-1, 0), "NE": (-1, 1), "E": (0, 1), "SE": (1, 1),
+                      "S": (1, 0), "SW": (1, -1), "W": (0, -1), "NW": (-1, -1)}
+        res = 0
+        current_x, current_y = row, col
+        for i in range(self.to_win):
+            x = current_x + directions[direction][0]
+            y = current_y + directions[direction][1]
+            if 0 <= x < self.rows and 0 <= y < self.cols:
+                if self.board[x][y] == player_ind:
+                    res += 1
+                    current_x, current_y = x, y
+                else:
                     break
-            else:
-                return True
-        return False
+        return res
 
-    def check_win(self, player_ind):
-        for row in self.board:
-            if self.check_row(row, player_ind):
-                return True
-        for col in [self.get_col(x) for x in range(self.cols)]:
-            if self.check_row(col, player_ind):
-                return True
-        for diag_l in [self.get_diag_l(x) for x in range(self.cols + self.rows - 1)]:
-            if self.check_row(diag_l, player_ind):
-                return True
-        for diag_r in [self.get_diag_r(x) for x in range(self.cols + self.rows - 1)]:
-            if self.check_row(diag_r, player_ind):
-                return True
+    def check_win(self, player_ind, row, col):
+        dists = {"N": 0, "NE": 0, "E": 0, "SE": 0, "S": 0, "SW": 0, "W": 0, "NW": 0}
+        for direction in dists.keys():
+            dists[direction] = self.check_direction(row, col, direction, player_ind)
+        if dists["N"] + dists["S"] + 1 >= self.to_win:
+            return True
+        if dists["NE"] + dists["SW"] + 1 >= self.to_win:
+            return True
+        if dists["E"] + dists["W"] + 1 >= self.to_win:
+            return True
+        if dists["SE"] + dists["NW"] + 1 >= self.to_win:
+            return True
         return False
 
     def make_move(self, col, player_ind):
@@ -72,6 +58,6 @@ class Board():
             return -1
         else:
             self.board[lowest_free][col] = player_ind
-            if self.check_win(player_ind):
+            if self.check_win(player_ind, lowest_free, col):
                 return 1
         return 0
